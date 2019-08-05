@@ -7,5 +7,11 @@
     "test": "npm run test"
   },
   "author": "Leonardo Costa",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^6.1.0"
+  },
+  "bin": {
+    "unienv": "src/index.js"
+  }
 }

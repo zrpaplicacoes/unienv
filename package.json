@@ -1,0 +1,11 @@
+{
+  "name": "universal.env",
+  "version": "1.0.0",
+  "description": "Environt configuration manager for every type of project",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test"
+  },
+  "author": "Leonardo Costa",
+  "license": "MIT"
+}

@@ -1,50 +1,48 @@
 #! /usr/bin/env node
-const child_process = require("child_process");
 
 /* TAREFAS:
  * x git stash list
- * _ verifica se não tem nenhum "unienv stash push"
- * _ git stash push --include-untracked -m "unienv stash push"
- * _ listar entradas do .env
+ * x verifica se não tem nenhum "unienv stash push"
+ * x git stash push --include-untracked -m "unienv stash push"
+ * x listar entradas do .env
  * _ verifica se tem "unienv-prefix" no .env (se tiver, com o valor @, por exemplo, vai buscar por @API_URL ao invés de API_URL)
  * _ listar arquivos ignorados (.gitignore) // não sei como
  * _ procurar em todos os arquivos pelas entradas do .env, com exceção dos ignorados (usar regex e "match whole word")
  * _ substituir os resultados da busca pelos valores
  */
 
+const APP_ROOT = require('app-root-path');
+const { STASH_PUSH_NAME_PREFIX } = require('./constants');
+const {
+  getHeadInfo,
+  getStashList,
+  executeCommand,
+  readEnv,
+} = require('./methods');
+
 (async (args) => {
-    try {
-        const stashList = getStashList();
+  try {
+    if (args[0] === 'apply') {
+      const stashList = await getStashList();
 
-        
-        
-        process.exit(0);
-    } catch (error) {
-        console.error(`An error has ocurred: ${error instanceof Error ? error.message : error.toString()}`);
-        process.exit(1);
-    }
-})(process.argv.splice(2, process.argv.length -1));
+      if (stashList.some(stash => stash.name.startsWith(''))) throw new Error('environment variables already applied');
 
-async function getStashList() {
-    const stashList = await executeCommand('git stash list').split('\n');
-    const lastEntry = stashList.pop(); // the last entry commonly is an empty new line
-    if (lastEntry !== '') // but if it's not...
-        stashList.push(lastEntry);
-    return stashList;
-}
+      let envFile = args.find(arg => arg.startsWith('env='));
+      if (envFile) envFile = envFile.substring(4).replace(/["']/g, '');
+      else envFile = `${APP_ROOT}/.env`;
+      const envEntries = await readEnv(envFile);
 
-function executeCommand(command) {
-    return new Promise((resolve, reject) => {
-        return child_process.exec(command, (error, stdout, stderr) => {
-            if (error) {
-                reject(error);
-                return;
-            }
-            if (stderr.length > 0) {
-                reject(error);
-                return;
-            }
-            resolve(stdout);
-        });
-    });
-}
+      const stashName = `${STASH_PUSH_NAME_PREFIX} - ${getHeadInfo()}`;
+      await executeCommand(`git stash push --include-untracked -m "${stashName}"`);
+      await executeCommand('git stash apply --index');
+
+
+    } // else if (args[0] === '--help') {}
+
+
+    process.exit(0);
+  } catch (error) {
+    console.error(`An error has ocurred: ${error instanceof Error ? error.message : error.toString()}`);
+    process.exit(1);
+  }
+})(process.argv.splice(2, process.argv.length - 1));

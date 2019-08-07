@@ -18,6 +18,7 @@
     "unienv": "src/index.js"
   },
   "dependencies": {
-    "app-root-path": "^2.2.1"
+    "app-root-path": "^2.2.1",
+    "ignore": "^5.1.2"
   }
 }

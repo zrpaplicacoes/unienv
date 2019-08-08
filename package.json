@@ -1,5 +1,5 @@
 {
-  "name": "universal.env",
+  "name": "unienv",
   "version": "1.0.0",
   "description": "Environt configuration manager for every type of project",
   "main": "index.js",

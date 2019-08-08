@@ -25,7 +25,7 @@ const {
       await executeCommand('git checkout -b unienv', true);
       await executeCommand('git add -A', true);
       console.log('Commiting your work...');
-      await executeCommand('git commit -m "original changes"', true);
+      await executeCommand('git commit --allow-empty -m "original changes"', true);
 
       console.log(`Applying environment values from file ${path.basename(envFile)}...`);
       const fileList = await listFiles(APP_ROOT, path.join(APP_ROOT, '.gitignore'));

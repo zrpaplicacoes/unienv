@@ -1,5 +1,5 @@
 {
-  "name": "universal.env",
+  "name": "unienv",
   "version": "1.0.0",
   "description": "Environt configuration manager for every type of project",
   "main": "index.js",
@@ -9,9 +9,16 @@
   "author": "Leonardo Costa",
   "license": "MIT",
   "devDependencies": {
-    "eslint": "^6.1.0"
+    "eslint": "^6.1.0",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-import-resolver-babel-plugin-root-import": "^1.1.1",
+    "eslint-plugin-import": "^2.17.3"
   },
   "bin": {
     "unienv": "src/index.js"
+  },
+  "dependencies": {
+    "app-root-path": "^2.2.1",
+    "ignore": "^5.1.2"
   }
 }

@@ -4,19 +4,6 @@ const path = require('path');
 const ignore = require('ignore');
 const { Stash } = require('./classes');
 
-async function replace(filePath, searchPattern, value) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(filePath, (error, data) => {
-      if (error) reject(error);
-      const result = data.toString().replace(searchPattern, value);
-      fs.writeFile(filePath, result, null, (error2) => {
-        if (error2) reject(error2);
-        resolve();
-      });
-    });
-  });
-}
-
 function listFiles(folderPath, ignoreFilePath) {
   const ign = ignore().add(fs.readFileSync(ignoreFilePath).toString()).add(['.git', '.gitignore']);
   function recurse(recurseFolder) {
@@ -74,14 +61,14 @@ async function readEnv(filePath) {
   return keyValueList;
 }
 
-function executeCommand(command) {
+function executeCommand(command, ignoreStderr) {
   return new Promise((resolve, reject) => {
     exec(command, (error, stdout, stderr) => {
       if (error) {
         reject(error);
         return;
       }
-      if (stderr.length > 0) {
+      if (!ignoreStderr && stderr && stderr.length > 0) { // git likes to log as error...
         reject(error);
         return;
       }

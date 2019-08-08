@@ -4,13 +4,14 @@ const path = require('path');
 const ignore = require('ignore');
 const { Stash } = require('./classes');
 
-async function replaceInFile(filePath, searchPattern, value) {
+async function replace(filePath, searchPattern, value) {
   return new Promise((resolve, reject) => {
-    fs.readFile(filePath, null, (error, data) => {
+    fs.readFile(filePath, (error, data) => {
       if (error) reject(error);
       const result = data.toString().replace(searchPattern, value);
-      fs.writeFile(filePath, result, null, (error) => {
-        if (error) throw error;
+      fs.writeFile(filePath, result, null, (error2) => {
+        if (error2) reject(error2);
+        resolve();
       });
     });
   });
@@ -43,6 +44,20 @@ async function readTextFile(filePath) {
 }
 
 /**
+ * @param {string} filePath
+ * @param {string} content
+ * @throws {NodeJS.ErrnoException}
+ */
+async function writeTextFile(filePath, content) {
+  return new Promise((resolve, reject) => {
+    fs.writeFile(filePath, content, null, (error) => {
+      if (error) reject(error);
+      resolve();
+    });
+  });
+}
+
+/**
  * Reads and parse the indicated file for a list of key-value pairs
  *
  * @param {string} filePath file path
@@ -50,11 +65,11 @@ async function readTextFile(filePath) {
  */
 async function readEnv(filePath) {
   const data = await readTextFile(filePath);
-  const keyValueList = {};
+  const keyValueList = [];
   data.toString().split('\n').forEach((line) => {
     if (line.trim() === '') return;
     const [key, value] = line.split('=');
-    keyValueList.push({ key, value });
+    keyValueList.push({ key: key.trim(), value: value.trim() });
   });
   return keyValueList;
 }
@@ -100,11 +115,27 @@ async function getHeadInfo() {
   return `${commitId}@${branch}`;
 }
 
+/**
+ * Executes all promises simultaneously and only returns when every and each one has complete.
+ * @param {Array<T>} array
+ * @param {(item: T, index: number, array: Array.<T>)} callback
+ */
+async function asyncForEach(array, callback) {
+  const promises = [];
+  for (let index = 0; index < array.length; index += 1) {
+    promises.push(callback(array[index], index, array));
+  }
+  return Promise.all(promises);
+}
+
+
 module.exports = {
   readEnv,
   getStashList,
   getHeadInfo,
   executeCommand,
   listFiles,
-  replaceInFile,
+  asyncForEach,
+  writeTextFile,
+  readTextFile,
 };

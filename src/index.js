@@ -6,25 +6,28 @@
  * x git stash push --include-untracked -m "unienv stash push"
  * x listar entradas do .env
  * x listar arquivos ignorados (.gitignore) // não sei como
- * _ procurar em todos os arquivos pelas entradas do .env, com exceção dos ignorados (usar regex e "match whole word")
- * _ verifica se tem "unienv-prefix" no .env (se tiver, com o valor @, por exemplo, vai buscar por @API_URL ao invés de API_URL)
- * _ substituir os resultados da busca pelos valores
+ * x procurar em todos os arquivos pelas entradas do .env, com exceção dos ignorados (usar regex e "match whole word")
+ * _ verifica se tem "unienv_prefix" no .env (se tiver, com o valor @, por exemplo, vai buscar por http://google.com ao invés de API_URL)
+ * x substituir os resultados da busca pelos valores
  */
 
 const APP_ROOT = require('app-root-path').toString();
-const { STASH_PUSH_NAME_PREFIX } = require('./constants');
 const path = require('path');
+const { STASH_PUSH_NAME_PREFIX } = require('./constants');
 const {
   getHeadInfo,
   getStashList,
   executeCommand,
   readEnv,
   listFiles,
+  asyncForEach,
+  readTextFile,
+  writeTextFile,
 } = require('./methods');
 
 (async (args) => {
   try {
-    if (args[0] === 'apply') {
+    if (args[0] === '1') {
       const stashList = await getStashList();
 
       if (stashList.some(stash => stash.name.startsWith(''))) throw new Error('environment variables already applied');
@@ -33,14 +36,24 @@ const {
       if (envFile) envFile = envFile.substring(4).replace(/["']/g, '');
       else envFile = `${APP_ROOT}/.env`;
       const envEntries = await readEnv(envFile);
+      const prefixEntryIndex = envEntries.findIndex(entry => /UNIENV_PREFIX/gi.test(entry.key));
+      let prefix = '';
+      if (prefixEntryIndex >= 0) {
+        prefix = envEntries[prefixEntryIndex].value;
+        envEntries.splice(prefixEntryIndex, 1);
+      }
 
-      const stashName = `${STASH_PUSH_NAME_PREFIX} - ${getHeadInfo()}`;
-      await executeCommand(`git stash push --include-untracked -m "${stashName}"`);
-      await executeCommand('git stash apply --index');
+      // const stashName = `${STASH_PUSH_NAME_PREFIX} - ${await getHeadInfo()}`;
+      // await executeCommand(`git stash push --include-untracked -m "${stashName}"`);
+      // await executeCommand('git stash apply --index');
 
       const fileList = await listFiles(APP_ROOT, path.join(APP_ROOT, '.gitignore'));
-      fileList.forEach((file) => {
-
+      await asyncForEach(fileList, async (filePath) => {
+        let fileContent = await readTextFile(filePath);
+        envEntries.forEach((envEntry) => {
+          fileContent = fileContent.replace(new RegExp(`${prefix}\\b(${envEntry.key})\\b`), envEntry.value);
+        });
+        return writeTextFile(filePath, fileContent);
       });
     } // else if (args[0] === '--help') {}
 

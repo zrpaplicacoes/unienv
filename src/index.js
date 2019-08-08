@@ -19,7 +19,7 @@ const {
       const envEntries = await readEnv(envFile);
 
       const prefixArg = args.find(arg => /--prefix=/gi.test(arg));
-      const prefix = prefixArg ? prefixArg.substring(9) : '';
+      const prefix = prefixArg ? prefixArg.substring(9).replace(/["']/g, '') : '';
 
       const currentBranch = await executeCommand('git rev-parse --abbrev-ref HEAD');
       console.log('Creating unienv branch to save your work...');
@@ -56,6 +56,8 @@ const {
       console.log('Cleaning everything');
       await executeCommand('git branch -D unienv', true);
       console.log('Done. You can now commit and push your changes ;)');
+    } else if (args[0] === '--help' || args.length === 0) {
+      console.log(await readTextFile(path.join(__dirname, '..', 'README.md')));
     }
 
     process.exit(0);

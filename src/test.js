@@ -1,4 +1,4 @@
 module.exports = {
-  API_URL: '@API_URL',
-  RELEASE_NUMBER: '@RELEASE_NUMBER',
+  API_URL: 'http://google.com',
+  RELEASE_NUMBER: '2',
 };

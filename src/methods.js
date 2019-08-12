@@ -2,19 +2,41 @@ const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const ignore = require('ignore');
+const { isBinaryFileSync } = require('isbinaryfile');
 const { Stash } = require('./classes');
 
-function listFiles(folderPath, ignoreFilePath) {
-  const ign = ignore().add(fs.readFileSync(ignoreFilePath).toString()).add(['.git', '.gitignore']);
+/**
+ * List all files inside given folder, relative to it
+ * @param {string} relativeFolderPath
+ * @param {string} ignoreFilePath absolute (or relative to cwd) path to .gitignore file
+ * @param {boolean} ignoreBinaries if binary files should be ignored (use false if no binary files are tracked by git)
+ * @param {string|Array<string>} additionalIgnores .gitignore like paths to be ignored that aren't in .gitignore
+ * @returns {Array<string>} List of file paths relative to given folder
+ */
+function listFiles(relativeFolderPath, ignoreFilePath, ignoreBinaries, additionalIgnores) {
+  let ign = ignore().add(fs.readFileSync(ignoreFilePath).toString()).add(['.git', '.gitignore', '.gitattributes']);
+  if (additionalIgnores) ign = ign.add(additionalIgnores);
   function recurse(recurseFolder) {
-    const entryPaths = fs.readdirSync(recurseFolder);
-    const filePaths = entryPaths.filter(entryPath => fs.statSync(path.join(recurseFolder, entryPath)).isFile() && !ign.ignores(entryPath));
-    const dirPaths = entryPaths.filter(entryPath => !filePaths.includes(entryPath)
-      && (entryPath.endsWith('/') ? !ign.ignores(entryPath) : !ign.ignores(`${entryPath}/`)));
+    const entryPaths = fs.readdirSync(recurseFolder).map(entryPath => path.join(recurseFolder, entryPath));
+    const filePaths = [];
+    const dirPaths = [];
+
+    entryPaths.forEach((entryPath) => {
+      const isFile = fs.statSync(entryPath).isFile();
+      if ((isFile && !ign.ignores(entryPath))
+        || (!isFile && (entryPath.endsWith('/') ? !ign.ignores(entryPath) : !ign.ignores(`${entryPath}/`)))) {
+        if (isFile) {
+          if (!ignoreBinaries) filePaths.push(entryPath);
+          else if (!isBinaryFileSync(entryPath)) filePaths.push(entryPath);
+        } else dirPaths.push(entryPath);
+      }
+    });
+
     const dirFiles = dirPaths.reduce((prev, curr) => prev.concat(recurse(curr)), []);
-    return [...filePaths.map(entry => path.join(recurseFolder, entry)), ...dirFiles.map(entry => path.join(recurseFolder, entry))];
+
+    return [...filePaths, ...dirFiles];
   }
-  return recurse(folderPath);
+  return recurse(relativeFolderPath);
 }
 
 /**

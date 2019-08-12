@@ -1,6 +1,6 @@
 {
   "name": "unienv",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Environment configuration manager for every type of project",
   "main": "index.js",
   "scripts": {
@@ -20,5 +20,21 @@
   "dependencies": {
     "ignore": "^5.1.2",
     "isbinaryfile": "^4.0.2"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zrpaplicacoes/unienv.git"
+  },
+  "keywords": [
+    "env",
+    "environment",
+    "configuration",
+    "variable",
+    "dotenv",
+    ".env"
+  ],
+  "bugs": {
+    "url": "https://github.com/zrpaplicacoes/unienv/issues"
+  },
+  "homepage": "https://github.com/zrpaplicacoes/unienv#readme"
 }

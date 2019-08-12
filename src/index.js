@@ -72,7 +72,7 @@ const {
       await executeCommand('git branch -D unienv', true);
       console.log('>> Done. You can now commit and push your changes ;)');
     } else if (args[0] === '--help' || args.length === 0) {
-      console.log((await readTextFile(path.join(__dirname, '..', 'README.md'))).replace(/`/gmi, ''));
+      console.log((await readTextFile(path.join(__dirname, '..', 'help.txt'))));
     }
 
     process.exit(0);
